@@ -37,6 +37,9 @@ Start-Transcript -OutputDirectory $LogPath
 
 Add-Type -AssemblyName PresentationCore, PresentationFramework
 
+# Scheduled tasks that will be disabled or enabled
+$ScheduledTasks = 'XblGameSaveTaskLogon','XblGameSaveTask','Consolidator','UsbCeip','DmClient','DmClientOnScenarioDownload'
+
 Function DebloatAll {
     #Removes AppxPackages
     #Credit to /u/GavinEke for a modified version of my whitelist code
@@ -291,14 +294,9 @@ Function Protect-Privacy {
         Set-ItemProperty $People -Name PeopleBand -Value 0
     }
         
-    #Disables scheduled tasks that are considered unnecessary 
+    #Disables scheduled tasks that are considered unnecessary
     Write-Output "Disabling scheduled tasks"
-    Get-ScheduledTask  XblGameSaveTaskLogon | Disable-ScheduledTask
-    Get-ScheduledTask  XblGameSaveTask | Disable-ScheduledTask
-    Get-ScheduledTask  Consolidator | Disable-ScheduledTask
-    Get-ScheduledTask  UsbCeip | Disable-ScheduledTask
-    Get-ScheduledTask  DmClient | Disable-ScheduledTask
-    Get-ScheduledTask  DmClientOnScenarioDownload | Disable-ScheduledTask
+    $ScheduledTasks | ForEach-Object { Get-ScheduledTask -TaskName $_ | Disable-ScheduledTask }
 
     Write-Output "Stopping and disabling Diagnostics Tracking Service"
     #Disabling the Diagnostics Tracking Service
@@ -467,12 +465,7 @@ Function Revert-Changes {
         
     #Re-enables scheduled tasks that were disabled when running the Debloat switch
     Write-Output "Enabling scheduled tasks that were disabled"
-    Get-ScheduledTask XblGameSaveTaskLogon | Enable-ScheduledTask 
-    Get-ScheduledTask  XblGameSaveTask | Enable-ScheduledTask 
-    Get-ScheduledTask  Consolidator | Enable-ScheduledTask 
-    Get-ScheduledTask  UsbCeip | Enable-ScheduledTask 
-    Get-ScheduledTask  DmClient | Enable-ScheduledTask 
-    Get-ScheduledTask  DmClientOnScenarioDownload | Enable-ScheduledTask 
+    $ScheduledTasks | ForEach-Object { Get-ScheduledTask -TaskName $_ | Enable-ScheduledTask }
 
     Write-Output "Re-enabling and starting WAP Push Service"
     #Enable and start WAP Push Service

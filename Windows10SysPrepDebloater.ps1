@@ -7,6 +7,9 @@ param (
   [switch]$Debloat, [switch]$SysPrep
 )
 
+# Scheduled tasks to adjust during sysprep debloat
+$ScheduledTasks = 'XblGameSaveTaskLogon','XblGameSaveTask','Consolidator','UsbCeip','DmClient','DmClientOnScenarioDownload'
+
 Function Begin-SysPrep {
 
     param([switch]$SysPrep)
@@ -188,14 +191,9 @@ Function Protect-Privacy {
     Set-ItemProperty -Path Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name OemPreInstalledAppsEnabled -Value 0
     reg unload HKU\Default_User
     
-    #Disables scheduled tasks that are considered unnecessary 
+    #Disables scheduled tasks that are considered unnecessary
     Write-Output "Disabling scheduled tasks"
-    #Get-ScheduledTask -TaskName XblGameSaveTaskLogon | Disable-ScheduledTask -ErrorAction SilentlyContinue
-    Get-ScheduledTask -TaskName XblGameSaveTask | Disable-ScheduledTask -ErrorAction SilentlyContinue
-    Get-ScheduledTask -TaskName Consolidator | Disable-ScheduledTask -ErrorAction SilentlyContinue
-    Get-ScheduledTask -TaskName UsbCeip | Disable-ScheduledTask -ErrorAction SilentlyContinue
-    Get-ScheduledTask -TaskName DmClient | Disable-ScheduledTask -ErrorAction SilentlyContinue
-    Get-ScheduledTask -TaskName DmClientOnScenarioDownload | Disable-ScheduledTask -ErrorAction SilentlyContinue
+    $ScheduledTasks | ForEach-Object { Get-ScheduledTask -TaskName $_ | Disable-ScheduledTask -ErrorAction SilentlyContinue }
 }
 
 #This includes fixes by xsisbest
