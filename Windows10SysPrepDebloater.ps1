@@ -7,6 +7,13 @@ param (
   [switch]$Debloat, [switch]$SysPrep
 )
 
+$DebloatFolder = "C:\Temp\Windows10Debloater"
+if (!(Test-Path $DebloatFolder)) {
+    Write-Output "The folder '$DebloatFolder' doesn't exist. Creating now."
+    New-Item -Path $DebloatFolder -ItemType Directory | Out-Null
+}
+Start-Transcript -OutputDirectory $DebloatFolder
+
 Function Begin-SysPrep {
 
     param([switch]$SysPrep)
@@ -88,11 +95,43 @@ Function Remove-Keys {
         #Windows Share Target
         "HKCR:\Extensions\ContractId\Windows.ShareTarget\PackageId\ActiproSoftwareLLC.562882FEEB491_2.6.18.18_neutral__24pqs290vpjk0"
     )
-    
+
+    $RegistryBackupPath = Join-Path $DebloatFolder "RegistryBackups"
+    if (!(Test-Path $RegistryBackupPath)) {
+        New-Item -Path $RegistryBackupPath -ItemType Directory | Out-Null
+    }
+    Write-Output "Exporting registry keys to $RegistryBackupPath"
+    foreach ($Key in $Keys) {
+        $safeName = ($Key -replace '[\\/:*?\"<>|]', '_') + '.reg'
+        $backupFile = Join-Path $RegistryBackupPath $safeName
+        if (Test-Path $Key) {
+            reg.exe export $Key $backupFile /y | Out-Null
+            Write-Output "Backed up $Key to $backupFile"
+        }
+        else {
+            Write-Output "Registry key $Key not found; skipping backup"
+        }
+    }
+
     #This writes the output of each key it is removing and also removes the keys listed above.
     ForEach ($Key in $Keys) {
         Write-Output "Removing $Key from registry"
         Remove-Item $Key -Recurse -ErrorAction SilentlyContinue
+    }
+
+    Write-Output "Registry key backups saved to $RegistryBackupPath"
+}
+
+Function Restore-Keys {
+    $RegistryBackupPath = Join-Path $DebloatFolder "RegistryBackups"
+    if (Test-Path $RegistryBackupPath) {
+        Get-ChildItem -Path $RegistryBackupPath -Filter *.reg | ForEach-Object {
+            reg.exe import $_.FullName | Out-Null
+            Write-Output "Restored registry key from $($_.FullName)"
+        }
+    }
+    else {
+        Write-Output "No registry backups found at $RegistryBackupPath"
     }
 }
         

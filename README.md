@@ -71,7 +71,7 @@ There are 3 switch parameters in the `Windows10SysPrepDebloater.ps1` script.
 - **`-SysPrep`**, which runs the command within a function: get-appxpackage | remove-appxpackage. This is useful since some administrators need that command to run first in order for machines to be able to properly provision the apps for removal.
 
 - **`-Debloat`**, switch parameter which does as it suggests. It runs the following functions: Start-Debloat, Remove-Keys, and Protect-Privacy.
-Remove-Keys removes registry keys leftover that are associated with the bloatware apps listed above, but not removed during the Start-Debloat function.
+Remove-Keys removes registry keys leftover that are associated with the bloatware apps listed above, but not removed during the Start-Debloat function. Before deletion, each key is exported to `C:\Temp\Windows10Debloater\RegistryBackups` and can be restored with the `Restore-Keys` function.
 
 - **`-Privacy`**, adds and/or changes registry keys to stop some telemetry functions, stops Cortana from being used as your Search Index, disables "unnecessary" scheduled tasks, and more.
 
