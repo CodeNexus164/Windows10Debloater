@@ -1,3 +1,6 @@
+#Scheduled tasks previously disabled
+$ScheduledTasks = 'XblGameSaveTaskLogon','XblGameSaveTask','Consolidator','UsbCeip','DmClient','DmClientOnScenarioDownload'
+
 #This function will revert the changes you made when running the Start-Debloat function.
         
     #This line reinstalls all of the bloatware that was removed
@@ -74,12 +77,7 @@
         
     #Re-enables scheduled tasks that were disabled when running the Debloat switch
     Write-Output "Enabling scheduled tasks that were disabled"
-    Get-ScheduledTask XblGameSaveTaskLogon | Enable-ScheduledTask 
-    Get-ScheduledTask  XblGameSaveTask | Enable-ScheduledTask 
-    Get-ScheduledTask  Consolidator | Enable-ScheduledTask 
-    Get-ScheduledTask  UsbCeip | Enable-ScheduledTask 
-    Get-ScheduledTask  DmClient | Enable-ScheduledTask 
-    Get-ScheduledTask  DmClientOnScenarioDownload | Enable-ScheduledTask 
+    $ScheduledTasks | ForEach-Object { Get-ScheduledTask -TaskName $_ | Enable-ScheduledTask }
 
     Write-Output "Re-enabling and starting WAP Push Service"
     #Enable and start WAP Push Service

@@ -1,3 +1,6 @@
+#Scheduled tasks to disable
+$ScheduledTasks = 'XblGameSaveTaskLogon','XblGameSaveTask','Consolidator','UsbCeip','DmClient','DmClientOnScenarioDownload'
+
 #Disables Windows Feedback Experience
     Write-Output "Disabling Windows Feedback Experience program"
     $Advertising = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo"
@@ -114,15 +117,10 @@
     }
     Set-ItemProperty $People  PeopleBand -Value 0 
         
-    #Disables scheduled tasks that are considered unnecessary 
+    #Disables scheduled tasks that are considered unnecessary
     Write-Output "Disabling scheduled tasks"
-    Get-ScheduledTask  XblGameSaveTaskLogon | Disable-ScheduledTask
-    Get-ScheduledTask  XblGameSaveTask | Disable-ScheduledTask
-    Get-ScheduledTask  Consolidator | Disable-ScheduledTask
-    Get-ScheduledTask  UsbCeip | Disable-ScheduledTask
-    Get-ScheduledTask  DmClient | Disable-ScheduledTask
-    Get-ScheduledTask  DmClientOnScenarioDownload | Disable-ScheduledTask
-    
+    $ScheduledTasks | ForEach-Object { Get-ScheduledTask -TaskName $_ | Disable-ScheduledTask }
+
     Write-Output "Stopping and disabling WAP Push Service"
     #Stop and disable WAP Push Service
 	Stop-Service "dmwappushservice"

@@ -10,6 +10,9 @@ $EnableEdgePDFTakeover.Location = New-Object System.Drawing.Point(155, 260)
 
 $ErrorActionPreference = 'SilentlyContinue'
 
+# Scheduled tasks reused across disable and revert actions
+$ScheduledTasks = 'XblGameSaveTaskLogon','XblGameSaveTask','Consolidator','UsbCeip','DmClient','DmClientOnScenarioDownload'
+
 $Button = [System.Windows.MessageBoxButton]::YesNoCancel
 $ErrorIco = [System.Windows.MessageBoxImage]::Error
 $Ask = 'Do you want to run this as an Administrator?
@@ -868,14 +871,9 @@ $RemoveAllBloatware.Add_Click( {
             Set-ItemProperty -Path Registry::HKU\Default_User\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name OemPreInstalledAppsEnabled -Value 0
             reg unload HKU\Default_User
       
-            #Disables scheduled tasks that are considered unnecessary 
+            #Disables scheduled tasks that are considered unnecessary
             Write-Host "Disabling scheduled tasks"
-            #Get-ScheduledTask -TaskName XblGameSaveTaskLogon | Disable-ScheduledTask
-            Get-ScheduledTask -TaskName XblGameSaveTask | Disable-ScheduledTask
-            Get-ScheduledTask -TaskName Consolidator | Disable-ScheduledTask
-            Get-ScheduledTask -TaskName UsbCeip | Disable-ScheduledTask
-            Get-ScheduledTask -TaskName DmClient | Disable-ScheduledTask
-            Get-ScheduledTask -TaskName DmClientOnScenarioDownload | Disable-ScheduledTask
+            $ScheduledTasks | ForEach-Object { Get-ScheduledTask -TaskName $_ | Disable-ScheduledTask }
         }
 
         Function UnpinStart {
@@ -1042,12 +1040,7 @@ $RevertChanges.Add_Click( {
         
         #Re-enables scheduled tasks that were disabled when running the Debloat switch
         Write-Host "Enabling scheduled tasks that were disabled"
-        Get-ScheduledTask XblGameSaveTaskLogon | Enable-ScheduledTask 
-        Get-ScheduledTask  XblGameSaveTask | Enable-ScheduledTask 
-        Get-ScheduledTask  Consolidator | Enable-ScheduledTask 
-        Get-ScheduledTask  UsbCeip | Enable-ScheduledTask 
-        Get-ScheduledTask  DmClient | Enable-ScheduledTask 
-        Get-ScheduledTask  DmClientOnScenarioDownload | Enable-ScheduledTask 
+        $ScheduledTasks | ForEach-Object { Get-ScheduledTask -TaskName $_ | Enable-ScheduledTask }
 
         Write-Host "Re-enabling and starting WAP Push Service"
         #Enable and start WAP Push Service
@@ -1297,14 +1290,9 @@ $DisableTelemetry.Add_Click( {
             Set-ItemProperty $People -Name PeopleBand -Value 0
         } 
         
-        #Disables scheduled tasks that are considered unnecessary 
+        #Disables scheduled tasks that are considered unnecessary
         Write-Host "Disabling scheduled tasks"
-        #Get-ScheduledTask XblGameSaveTaskLogon | Disable-ScheduledTask
-        Get-ScheduledTask XblGameSaveTask | Disable-ScheduledTask
-        Get-ScheduledTask Consolidator | Disable-ScheduledTask
-        Get-ScheduledTask UsbCeip | Disable-ScheduledTask
-        Get-ScheduledTask DmClient | Disable-ScheduledTask
-        Get-ScheduledTask DmClientOnScenarioDownload | Disable-ScheduledTask
+        $ScheduledTasks | ForEach-Object { Get-ScheduledTask -TaskName $_ | Disable-ScheduledTask }
 
         #Write-Host "Uninstalling Telemetry Windows Updates"
         #Uninstalls Some Windows Updates considered to be Telemetry. !WIP!
