@@ -13,7 +13,8 @@ Be sure to look at the Contributors' GitHubs to see if they have GitHub sponsors
 ## Disclaimer
 
 **WARNING:** I do **NOT** take responsibility for what may happen to your system! Run scripts at your own risk!
-Also, other variants of this repo are not technically "new" versions of this, but they are different in their own respective ways. There are some sites saying that other projects are "new" versions of this, but that is inaccurate. 
+Also, other variants of this repo are not technically "new" versions of this, but they are different in their own respective ways. There are some sites saying that other projects are "new" versions of this, but that is inaccurate.
+These scripts are intended for Windows 10 and check the operating system at startup. They will warn and exit on other versions unless the `-Force` switch is used.
 
 ## How To Run the Windows10Debloater.ps1 and the Windows10DebloaterGUI.ps1 files
 

@@ -1,6 +1,18 @@
 #This function finds any AppX/AppXProvisioned package and uninstalls it, except for Freshpaint, Windows Calculator, Windows Store, and Windows Photos.
 #Also, to note - This does NOT remove essential system services/software/etc such as .NET framework installations, Cortana, Edge, etc.
 
+param(
+    [switch]$Force
+)
+
+$osVersion = [System.Environment]::OSVersion.Version
+if ($osVersion.Major -ne 10) {
+    Write-Warning "Detected Windows version $($osVersion). This script is intended for Windows 10."
+    if (-not $Force) {
+        return
+    }
+}
+
 #This will self elevate the script so with a UAC prompt since this script needs to be run as an Administrator in order to function properly.
 If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
     Write-Host "You didn't run this script as an Administrator. This script will self elevate to run as an Administrator and continue."

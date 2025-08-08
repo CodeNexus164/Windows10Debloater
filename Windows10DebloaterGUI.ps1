@@ -6,6 +6,18 @@ $EnableEdgePDFTakeover.Location = New-Object System.Drawing.Point(155, 260)
 
 #>
 
+param(
+    [switch]$Force
+)
+
+$osVersion = [System.Environment]::OSVersion.Version
+if ($osVersion.Major -ne 10) {
+    Write-Warning "Detected Windows version $($osVersion). This script is intended for Windows 10."
+    if (-not $Force) {
+        return
+    }
+}
+
 #This will self elevate the script so with a UAC prompt since this script needs to be run as an Administrator in order to function properly.
 
 $ErrorActionPreference = 'SilentlyContinue'
