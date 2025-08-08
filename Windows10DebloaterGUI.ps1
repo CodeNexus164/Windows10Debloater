@@ -37,7 +37,7 @@ If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 
 
 #Unnecessary Windows 10 AppX apps that will be removed by the blacklist.
-$global:Bloatware = @(
+$Bloatware = @(
     "Microsoft.PPIProjection"
     "Microsoft.BingNews"
     "Microsoft.GetHelp"
@@ -100,7 +100,7 @@ $global:Bloatware = @(
 
 #Valuable Windows 10 AppX apps that most people want to keep. Protected from DeBloat All.
 #Credit to /u/GavinEke for a modified version of my whitelist code
-$global:WhiteListedApps = @(
+$WhiteListedApps = @(
     "Microsoft.WindowsCalculator"               # Microsoft removed legacy calculator
     "Microsoft.WindowsStore"                    # Issue 1
     "Microsoft.Windows.Photos"                  # Microsoft disabled/hid legacy photo viewer
@@ -203,8 +203,8 @@ Function dotInclude() {
 dotInclude 'custom-lists.ps1'
 
 #convert to regular expression to allow for the super-useful -match operator
-$global:BloatwareRegex = $global:Bloatware -join '|'
-$global:WhiteListedAppsRegex = $global:WhiteListedApps -join '|'
+$BloatwareRegex = $Bloatware -join '|'
+$WhiteListedAppsRegex = $WhiteListedApps -join '|'
 
 
 # This form was created using POSHGUI.com  a free online gui designer for PowerShell
@@ -530,7 +530,7 @@ $CustomizeBlacklist.Add_Click( {
         $SaveList.Add_Click( {
                # $ErrorActionPreference = 'SilentlyContinue'
 
-                '$global:WhiteListedApps = @(' | Out-File -FilePath $PSScriptRoot\custom-lists.ps1 -Encoding utf8
+                '$WhiteListedApps = @(' | Out-File -FilePath $PSScriptRoot\custom-lists.ps1 -Encoding utf8
                 @($ListPanel.controls) | ForEach {
                     if ($_ -is [System.Windows.Forms.CheckBox] -and $_.Enabled -and !$_.Checked) {
                         "    ""$( $_.Text )""" | Out-File -FilePath $PSScriptRoot\custom-lists.ps1 -Append -Encoding utf8
@@ -538,7 +538,7 @@ $CustomizeBlacklist.Add_Click( {
                 }
                 ')' | Out-File -FilePath $PSScriptRoot\custom-lists.ps1 -Append -Encoding utf8
 
-                '$global:Bloatware = @(' | Out-File -FilePath $PSScriptRoot\custom-lists.ps1 -Append -Encoding utf8
+                '$Bloatware = @(' | Out-File -FilePath $PSScriptRoot\custom-lists.ps1 -Append -Encoding utf8
                 @($ListPanel.controls) | ForEach {
                     if ($_ -is [System.Windows.Forms.CheckBox] -and $_.Enabled -and $_.Checked) {
                         "    ""$($_.Text)""" | Out-File -FilePath $PSScriptRoot\custom-lists.ps1 -Append -Encoding utf8
@@ -550,8 +550,8 @@ $CustomizeBlacklist.Add_Click( {
                 dotInclude custom-lists.ps1
 
                 #convert to regular expression to allow for the super-useful -match operator
-                $global:BloatwareRegex = $global:Bloatware -join '|'
-                $global:WhiteListedAppsRegex = $global:WhiteListedApps -join '|'
+                $script:BloatwareRegex = $Bloatware -join '|'
+                $script:WhiteListedAppsRegex = $WhiteListedApps -join '|'
             })
 
         Function AddAppToCustomizeForm() {
@@ -601,8 +601,8 @@ $CustomizeBlacklist.Add_Click( {
 
         ForEach ($item in $NonRemovables) {
             $string = ""
-            if ( $null -notmatch $global:BloatwareRegex -and $item -cmatch $global:BloatwareRegex ) { $string += " ConflictBlacklist " }
-            if ( $null -notmatch $global:WhiteListedAppsRegex -and $item -cmatch $global:WhiteListedAppsRegex ) { $string += " ConflictWhitelist" }
+            if ( $null -notmatch $BloatwareRegex -and $item -cmatch $BloatwareRegex ) { $string += " ConflictBlacklist " }
+            if ( $null -notmatch $WhiteListedAppsRegex -and $item -cmatch $WhiteListedAppsRegex ) { $string += " ConflictWhitelist" }
             if ( $null -notmatch $Installed -and $Installed -cmatch $item) { $string += "Installed" }
             if ( $null -notmatch $AllUsers -and $AllUsers -cmatch $item) { $string += " AllUsers" }
             if ( $null -notmatch $Online -and $Online -cmatch $item) { $string += " Online" }
@@ -610,20 +610,20 @@ $CustomizeBlacklist.Add_Click( {
             AddAppToCustomizeForm $checkboxCounter $item $true $false $false $string
             ++$checkboxCounter
         }
-        ForEach ( $item in $global:WhiteListedApps ) {
+        ForEach ( $item in $WhiteListedApps ) {
             $string = ""
             if ( $null -notmatch $NonRemovables -and $NonRemovables -cmatch $item ) { $string += " Conflict NonRemovables " }
-            if ( $null -notmatch $global:BloatwareRegex -and $item -cmatch $global:BloatwareRegex ) { $string += " ConflictBlacklist " }
+            if ( $null -notmatch $BloatwareRegex -and $item -cmatch $BloatwareRegex ) { $string += " ConflictBlacklist " }
             if ( $null -notmatch $Installed -and $Installed -cmatch $item) { $string += "Installed" }
             if ( $null -notmatch $AllUsers -and $AllUsers -cmatch $item) { $string += " AllUsers" }
             if ( $null -notmatch $Online -and $Online -cmatch $item) { $string += " Online" }
             AddAppToCustomizeForm $checkboxCounter $item $true $false $true $string
             ++$checkboxCounter
         }
-        ForEach ( $item in $global:Bloatware ) {
+        ForEach ( $item in $Bloatware ) {
             $string = ""
             if ( $null -notmatch $NonRemovables -and $NonRemovables -cmatch $item ) { $string += " Conflict NonRemovables " }
-            if ( $null -notmatch $global:WhiteListedAppsRegex -and $item -cmatch $global:WhiteListedAppsRegex ) { $string += " Conflict Whitelist " }
+            if ( $null -notmatch $WhiteListedAppsRegex -and $item -cmatch $WhiteListedAppsRegex ) { $string += " Conflict Whitelist " }
             if ( $null -notmatch $Installed -and $Installed -cmatch $item) { $string += "Installed" }
             if ( $null -notmatch $AllUsers -and $AllUsers -cmatch $item) { $string += " AllUsers" }
             if ( $null -notmatch $Online -and $Online -cmatch $item) { $string += " Online" }
@@ -633,8 +633,8 @@ $CustomizeBlacklist.Add_Click( {
         ForEach ( $item in $AllUsers ) {
             $string = "NEW   AllUsers"
             if ( $null -notmatch $NonRemovables -and $NonRemovables -cmatch $item ) { continue }
-            if ( $null -notmatch $global:WhiteListedAppsRegex -and $item -cmatch $global:WhiteListedAppsRegex ) { continue }
-            if ( $null -notmatch $global:BloatwareRegex -and $item -cmatch $global:BloatwareRegex ) { continue }
+            if ( $null -notmatch $WhiteListedAppsRegex -and $item -cmatch $WhiteListedAppsRegex ) { continue }
+            if ( $null -notmatch $BloatwareRegex -and $item -cmatch $BloatwareRegex ) { continue }
             if ( $null -notmatch $Installed -and $Installed -cmatch $item) { $string += " Installed" }
             if ( $null -notmatch $Online -and $Online -cmatch $item) { $string += " Online" }
             AddAppToCustomizeForm $checkboxCounter $item $true $true $true $string
@@ -643,8 +643,8 @@ $CustomizeBlacklist.Add_Click( {
         ForEach ( $item in $Installed ) {
             $string = "NEW   Installed"
             if ( $null -notmatch $NonRemovables -and $NonRemovables -cmatch $item ) { continue }
-            if ( $null -notmatch $global:WhiteListedAppsRegex -and $item -cmatch $global:WhiteListedAppsRegex ) { continue }
-            if ( $null -notmatch $global:BloatwareRegex -and $item -cmatch $global:BloatwareRegex ) { continue }
+            if ( $null -notmatch $WhiteListedAppsRegex -and $item -cmatch $WhiteListedAppsRegex ) { continue }
+            if ( $null -notmatch $BloatwareRegex -and $item -cmatch $BloatwareRegex ) { continue }
             if ( $null -notmatch $AllUsers -and $AllUsers -cmatch $item) { continue }
             if ( $null -notmatch $Online -and $Online -cmatch $item) { $string += " Online" }
             AddAppToCustomizeForm $checkboxCounter $item $true $true $true $string
@@ -653,8 +653,8 @@ $CustomizeBlacklist.Add_Click( {
         ForEach ( $item in $Online ) {
             $string = "NEW   Online "
             if ( $null -notmatch $NonRemovables -and $NonRemovables -cmatch $item ) { continue }
-            if ( $null -notmatch $global:WhiteListedAppsRegex -and $item -cmatch $global:WhiteListedAppsRegex ) { continue }
-            if ( $null -notmatch $global:BloatwareRegex -and $item -cmatch $global:BloatwareRegex ) { continue }
+            if ( $null -notmatch $WhiteListedAppsRegex -and $item -cmatch $WhiteListedAppsRegex ) { continue }
+            if ( $null -notmatch $BloatwareRegex -and $item -cmatch $BloatwareRegex ) { continue }
             if ( $null -notmatch $Installed -and $Installed -cmatch $item) { continue }
             if ( $null -notmatch $AllUsers -and $AllUsers -cmatch $item) { continue }
             AddAppToCustomizeForm $checkboxCounter $item $true $true $true $string
@@ -664,19 +664,20 @@ $CustomizeBlacklist.Add_Click( {
     })
 
 
-$RemoveBlacklistedBloatware.Add_Click( { 
+$RemoveBlacklistedBloatware.Add_Click( {
         $ErrorActionPreference = 'SilentlyContinue'
         Function DebloatBlacklist {
-            Write-Host "Requesting removal of $global:BloatwareRegex"
+            param([string]$BloatwareRegex)
+            Write-Host "Requesting removal of $BloatwareRegex"
             Write-Host "--- This may take a while - please be patient ---"
-            Get-AppxPackage | Where-Object Name -cmatch $global:BloatwareRegex | Remove-AppxPackage
+            Get-AppxPackage | Where-Object Name -cmatch $BloatwareRegex | Remove-AppxPackage
             Write-Host "...now starting the silent ProvisionedPackage bloatware removal..."
-            Get-AppxProvisionedPackage -Online | Where-Object DisplayName -cmatch $global:BloatwareRegex | Remove-AppxProvisionedPackage -Online
+            Get-AppxProvisionedPackage -Online | Where-Object DisplayName -cmatch $BloatwareRegex | Remove-AppxProvisionedPackage -Online
             Write-Host "...and the final cleanup..."
-            Get-AppxPackage -AllUsers | Where-Object Name -cmatch $global:BloatwareRegex | Remove-AppxPackage
+            Get-AppxPackage -AllUsers | Where-Object Name -cmatch $BloatwareRegex | Remove-AppxPackage
         }
         Write-Host "`n`n`n`n`n`n`n`n`n`n`n`n`n`n`n`n`nRemoving blocklisted Bloatware.`n"
-        DebloatBlacklist
+        DebloatBlacklist -BloatwareRegex $BloatwareRegex
         Write-Host "Bloatware removed!"
     })
 $RemoveAllBloatware.Add_Click( { 
@@ -721,9 +722,9 @@ $RemoveAllBloatware.Add_Click( {
 
         Function DebloatAll {
             #Removes AppxPackages
-            Get-AppxPackage | Where { !($_.Name -cmatch $global:WhiteListedAppsRegex) -and !($NonRemovables -cmatch $_.Name) } | Remove-AppxPackage
-            Get-AppxProvisionedPackage -Online | Where { !($_.DisplayName -cmatch $global:WhiteListedAppsRegex) -and !($NonRemovables -cmatch $_.DisplayName) } | Remove-AppxProvisionedPackage -Online
-            Get-AppxPackage -AllUsers | Where { !($_.Name -cmatch $global:WhiteListedAppsRegex) -and !($NonRemovables -cmatch $_.Name) } | Remove-AppxPackage
+            Get-AppxPackage | Where { !($_.Name -cmatch $WhiteListedAppsRegex) -and !($NonRemovables -cmatch $_.Name) } | Remove-AppxPackage
+            Get-AppxProvisionedPackage -Online | Where { !($_.DisplayName -cmatch $WhiteListedAppsRegex) -and !($NonRemovables -cmatch $_.DisplayName) } | Remove-AppxProvisionedPackage -Online
+            Get-AppxPackage -AllUsers | Where { !($_.Name -cmatch $WhiteListedAppsRegex) -and !($NonRemovables -cmatch $_.Name) } | Remove-AppxPackage
         }
   
         #Creates a PSDrive to be able to access the 'HKCR' tree
