@@ -378,10 +378,10 @@ Function Stop-EdgePDF {
         New-ItemProperty $NoWithList  NoStaticDefaultVerb 
     }
             
-    #Appends an underscore '_' to the Registry key for Edge
-    $Edge = "HKCR:\AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723_"
+    # Appends an underscore '_' to the Registry key for Edge
+    $Edge = "HKCR:\AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723"
     If (Test-Path $Edge) {
-        Set-Item $Edge AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723_ 
+        Rename-Item -Path $Edge -NewName ($Edge + "_")
     }
 }
 
