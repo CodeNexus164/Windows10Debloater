@@ -6,37 +6,24 @@ $EnableEdgePDFTakeover.Location = New-Object System.Drawing.Point(155, 260)
 
 #>
 
-#This will self elevate the script so with a UAC prompt since this script needs to be run as an Administrator in order to function properly.
+#This will self elevate the script with a UAC prompt since this script needs to be run as an Administrator in order to function properly.
 
 $ErrorActionPreference = 'SilentlyContinue'
 
+# Prompt for elevation if not already running as admin
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    [System.Windows.MessageBox]::Show(
+        'This script must be run as administrator. The script will now restart with elevated permissions.',
+        'Elevation Required',
+        [System.Windows.MessageBoxButton]::OK,
+        [System.Windows.MessageBoxImage]::Information
+    ) | Out-Null
+    Start-Process -FilePath 'powershell' -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    exit
+}
+
 # Scheduled tasks reused across disable and revert actions
 $ScheduledTasks = 'XblGameSaveTaskLogon','XblGameSaveTask','Consolidator','UsbCeip','DmClient','DmClientOnScenarioDownload'
-
-$Button = [System.Windows.MessageBoxButton]::YesNoCancel
-$ErrorIco = [System.Windows.MessageBoxImage]::Error
-$Ask = 'Do you want to run this as an Administrator?
-
-        Select "Yes" to Run as an Administrator
-
-        Select "No" to not run this as an Administrator
-        
-        Select "Cancel" to stop the script.'
-
-If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
-    $Prompt = [System.Windows.MessageBox]::Show($Ask, "Run as an Administrator or not?", $Button, $ErrorIco) 
-    Switch ($Prompt) {
-        #This will debloat Windows 10
-        Yes {
-            Write-Host "You didn't run this script as an Administrator. This script will self elevate to run as an Administrator and continue."
-            Start-Process PowerShell.exe -ArgumentList ("-NoProfile -ExecutionPolicy Bypass -File `"{0}`"" -f $PSCommandPath) -Verb RunAs
-            Exit
-        }
-        No {
-            Break
-        }
-    }
-}
 
 
 #Unnecessary Windows 10 AppX apps that will be removed by the blacklist.
@@ -214,9 +201,17 @@ $WhiteListedAppsRegex = $WhiteListedApps -join '|'
 Add-Type -AssemblyName System.Windows.Forms
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
+function Set-ButtonStyle {
+    param([System.Windows.Forms.Button]$Button)
+    $Button.BackColor = [System.Drawing.ColorTranslator]::FromHtml('#333333')
+    $Button.FlatAppearance.BorderColor = [System.Drawing.ColorTranslator]::FromHtml('#1e1e1e')
+    $Button.FlatAppearance.BorderSize = 1
+}
+
 $Form                            = New-Object system.Windows.Forms.Form
 $Form.ClientSize                 = New-Object System.Drawing.Point(500,570)
 $Form.StartPosition              = 'CenterScreen'
+$Form.Font                       = New-Object System.Drawing.Font('Segoe UI',9)
 $Form.FormBorderStyle            = 'FixedSingle'
 $Form.MinimizeBox                = $false
 $Form.MaximizeBox                = $false
@@ -268,7 +263,7 @@ $Debloat.width                   = 457
 $Debloat.height                  = 142
 $Debloat.Anchor                  = 'top,right,left'
 $Debloat.location                = New-Object System.Drawing.Point(10,9)
-$Debloat.Font                    = New-Object System.Drawing.Font('Consolas',15,[System.Drawing.FontStyle]([System.Drawing.FontStyle]::Bold))
+$Debloat.Font                    = New-Object System.Drawing.Font('Segoe UI',15,[System.Drawing.FontStyle]([System.Drawing.FontStyle]::Bold))
 $Debloat.ForeColor               = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
 
 $CustomizeBlacklist             = New-Object system.Windows.Forms.Button
@@ -278,8 +273,9 @@ $CustomizeBlacklist.width       = 460
 $CustomizeBlacklist.height      = 30
 $CustomizeBlacklist.Anchor      = 'top,right,left'
 $CustomizeBlacklist.location    = New-Object System.Drawing.Point(10,40)
-$CustomizeBlacklist.Font        = New-Object System.Drawing.Font('Consolas',9)
+$CustomizeBlacklist.Font        = New-Object System.Drawing.Font('Segoe UI',9)
 $CustomizeBlacklist.ForeColor   = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+Set-ButtonStyle $CustomizeBlacklist
 
 $RemoveAllBloatware              = New-Object system.Windows.Forms.Button
 $RemoveAllBloatware.FlatStyle    = 'Flat'
@@ -288,8 +284,9 @@ $RemoveAllBloatware.width        = 460
 $RemoveAllBloatware.height       = 30
 $RemoveAllBloatware.Anchor       = 'top,right,left'
 $RemoveAllBloatware.location     = New-Object System.Drawing.Point(10,80)
-$RemoveAllBloatware.Font         = New-Object System.Drawing.Font('Consolas',9)
+$RemoveAllBloatware.Font         = New-Object System.Drawing.Font('Segoe UI',9)
 $RemoveAllBloatware.ForeColor    = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+Set-ButtonStyle $RemoveAllBloatware
 
 $RemoveBlacklistedBloatware                 = New-Object system.Windows.Forms.Button
 $RemoveBlacklistedBloatware.FlatStyle       = 'Flat'
@@ -298,8 +295,9 @@ $RemoveBlacklistedBloatware.width           = 460
 $RemoveBlacklistedBloatware.height          = 30
 $RemoveBlacklistedBloatware.Anchor          = 'top,right,left'
 $RemoveBlacklistedBloatware.location        = New-Object System.Drawing.Point(10,120)
-$RemoveBlacklistedBloatware.Font            = New-Object System.Drawing.Font('Consolas',9)
+$RemoveBlacklistedBloatware.Font            = New-Object System.Drawing.Font('Segoe UI',9)
 $RemoveBlacklistedBloatware.ForeColor       = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+Set-ButtonStyle $RemoveBlacklistedBloatware
 
 $Registry                        = New-Object system.Windows.Forms.Label
 $Registry.text                   = "REGISTRY CHANGES"
@@ -308,7 +306,7 @@ $Registry.width                  = 457
 $Registry.height                 = 142
 $Registry.Anchor                 = 'top,right,left'
 $Registry.location               = New-Object System.Drawing.Point(10,10)
-$Registry.Font                   = New-Object System.Drawing.Font('Consolas',15,[System.Drawing.FontStyle]([System.Drawing.FontStyle]::Bold))
+$Registry.Font                   = New-Object System.Drawing.Font('Segoe UI',15,[System.Drawing.FontStyle]([System.Drawing.FontStyle]::Bold))
 $Registry.ForeColor              = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
 
 $RevertChanges                    = New-Object system.Windows.Forms.Button
@@ -318,8 +316,9 @@ $RevertChanges.width              = 460
 $RevertChanges.height             = 30
 $RevertChanges.Anchor             = 'top,right,left'
 $RevertChanges.location           = New-Object System.Drawing.Point(10,40)
-$RevertChanges.Font               = New-Object System.Drawing.Font('Consolas',9)
+$RevertChanges.Font               = New-Object System.Drawing.Font('Segoe UI',9)
 $RevertChanges.ForeColor          = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+Set-ButtonStyle $RevertChanges
 
 $Cortana                         = New-Object system.Windows.Forms.Label
 $Cortana.text                    = "CORTANA"
@@ -328,7 +327,7 @@ $Cortana.width                   = 457
 $Cortana.height                  = 142
 $Cortana.Anchor                  = 'top,right,left'
 $Cortana.location                = New-Object System.Drawing.Point(10,10)
-$Cortana.Font                    = New-Object System.Drawing.Font('Consolas',15,[System.Drawing.FontStyle]([System.Drawing.FontStyle]::Bold))
+$Cortana.Font                    = New-Object System.Drawing.Font('Segoe UI',15,[System.Drawing.FontStyle]([System.Drawing.FontStyle]::Bold))
 $Cortana.ForeColor               = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
 
 $EnableCortana                   = New-Object system.Windows.Forms.Button
@@ -338,8 +337,9 @@ $EnableCortana.width             = 133
 $EnableCortana.height            = 30
 $EnableCortana.Anchor            = 'top,right,left'
 $EnableCortana.location          = New-Object System.Drawing.Point(10,40)
-$EnableCortana.Font              = New-Object System.Drawing.Font('Consolas',9)
+$EnableCortana.Font              = New-Object System.Drawing.Font('Segoe UI',9)
 $EnableCortana.ForeColor         = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+Set-ButtonStyle $EnableCortana
 
 $DisableCortana                  = New-Object system.Windows.Forms.Button
 $DisableCortana.FlatStyle        = 'Flat'
@@ -348,8 +348,9 @@ $DisableCortana.width            = 133
 $DisableCortana.height           = 30
 $DisableCortana.Anchor           = 'top,right,left'
 $DisableCortana.location         = New-Object System.Drawing.Point(10,80)
-$DisableCortana.Font             = New-Object System.Drawing.Font('Consolas',9)
+$DisableCortana.Font             = New-Object System.Drawing.Font('Segoe UI',9)
 $DisableCortana.ForeColor        = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+Set-ButtonStyle $DisableCortana
 
 $Edge                            = New-Object system.Windows.Forms.Label
 $Edge.text                       = "EDGE PDF"
@@ -358,7 +359,7 @@ $Edge.width                      = 457
 $Edge.height                     = 142
 $Edge.Anchor                     = 'top,right,left'
 $Edge.location                   = New-Object System.Drawing.Point(10,10)
-$Edge.Font                       = New-Object System.Drawing.Font('Consolas',15,[System.Drawing.FontStyle]([System.Drawing.FontStyle]::Bold))
+$Edge.Font                       = New-Object System.Drawing.Font('Segoe UI',15,[System.Drawing.FontStyle]([System.Drawing.FontStyle]::Bold))
 $Edge.ForeColor                  = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
 
 $EnableEdgePDFTakeover           = New-Object system.Windows.Forms.Button
@@ -368,8 +369,9 @@ $EnableEdgePDFTakeover.width     = 134
 $EnableEdgePDFTakeover.height    = 30
 $EnableEdgePDFTakeover.Anchor    = 'top,right,left'
 $EnableEdgePDFTakeover.location  = New-Object System.Drawing.Point(10,40)
-$EnableEdgePDFTakeover.Font      = New-Object System.Drawing.Font('Consolas',9)
+$EnableEdgePDFTakeover.Font      = New-Object System.Drawing.Font('Segoe UI',9)
 $EnableEdgePDFTakeover.ForeColor  = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+Set-ButtonStyle $EnableEdgePDFTakeover
 
 $DisableEdgePDFTakeover             = New-Object system.Windows.Forms.Button
 $DisableEdgePDFTakeover.FlatStyle   = 'Flat'
@@ -378,8 +380,9 @@ $DisableEdgePDFTakeover.width       = 134
 $DisableEdgePDFTakeover.height      = 30
 $DisableEdgePDFTakeover.Anchor      = 'top,right,left'
 $DisableEdgePDFTakeover.location    = New-Object System.Drawing.Point(10,80)
-$DisableEdgePDFTakeover.Font        = New-Object System.Drawing.Font('Consolas',9)
+$DisableEdgePDFTakeover.Font        = New-Object System.Drawing.Font('Segoe UI',9)
 $DisableEdgePDFTakeover.ForeColor   = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+Set-ButtonStyle $DisableEdgePDFTakeover
 
 $Theme                           = New-Object system.Windows.Forms.Label
 $Theme.text                      = "DARK THEME"
@@ -388,7 +391,7 @@ $Theme.width                     = 457
 $Theme.height                    = 142
 $Theme.Anchor                    = 'top,right,left'
 $Theme.location                  = New-Object System.Drawing.Point(10,10)
-$Theme.Font                      = New-Object System.Drawing.Font('Consolas',15,[System.Drawing.FontStyle]([System.Drawing.FontStyle]::Bold))
+$Theme.Font                      = New-Object System.Drawing.Font('Segoe UI',15,[System.Drawing.FontStyle]([System.Drawing.FontStyle]::Bold))
 $Theme.ForeColor                 = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
 
 $EnableDarkMode                  = New-Object system.Windows.Forms.Button
@@ -398,8 +401,9 @@ $EnableDarkMode.width            = 133
 $EnableDarkMode.height           = 30
 $EnableDarkMode.Anchor           = 'top,right,left'
 $EnableDarkMode.location         = New-Object System.Drawing.Point(10,40)
-$EnableDarkMode.Font             = New-Object System.Drawing.Font('Consolas',9)
+$EnableDarkMode.Font             = New-Object System.Drawing.Font('Segoe UI',9)
 $EnableDarkMode.ForeColor        = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+Set-ButtonStyle $EnableDarkMode
 
 $DisableDarkMode                 = New-Object system.Windows.Forms.Button
 $DisableDarkMode.FlatStyle       = 'Flat'
@@ -408,8 +412,9 @@ $DisableDarkMode.width           = 133
 $DisableDarkMode.height          = 30
 $DisableDarkMode.Anchor          = 'top,right,left'
 $DisableDarkMode.location        = New-Object System.Drawing.Point(10,80)
-$DisableDarkMode.Font            = New-Object System.Drawing.Font('Consolas',9)
+$DisableDarkMode.Font            = New-Object System.Drawing.Font('Segoe UI',9)
 $DisableDarkMode.ForeColor       = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+Set-ButtonStyle $DisableDarkMode
 
 $Other                           = New-Object system.Windows.Forms.Label
 $Other.text                      = "OTHER CHANGES & FIXES"
@@ -418,7 +423,7 @@ $Other.width                     = 457
 $Other.height                    = 142
 $Other.Anchor                    = 'top,right,left'
 $Other.location                  = New-Object System.Drawing.Point(10,10)
-$Other.Font                      = New-Object System.Drawing.Font('Consolas',15,[System.Drawing.FontStyle]([System.Drawing.FontStyle]::Bold))
+$Other.Font                      = New-Object System.Drawing.Font('Segoe UI',15,[System.Drawing.FontStyle]([System.Drawing.FontStyle]::Bold))
 $Other.ForeColor                 = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
 
 $RemoveOnedrive                  = New-Object system.Windows.Forms.Button
@@ -428,8 +433,9 @@ $RemoveOnedrive.width            = 225
 $RemoveOnedrive.height           = 30
 $RemoveOnedrive.Anchor           = 'top,right,left'
 $RemoveOnedrive.location         = New-Object System.Drawing.Point(10,40)
-$RemoveOnedrive.Font             = New-Object System.Drawing.Font('Consolas',9)
+$RemoveOnedrive.Font             = New-Object System.Drawing.Font('Segoe UI',9)
 $RemoveOnedrive.ForeColor        = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+Set-ButtonStyle $RemoveOnedrive
 
 $UnpinStartMenuTiles             = New-Object system.Windows.Forms.Button
 $UnpinStartMenuTiles.FlatStyle   = 'Flat'
@@ -438,8 +444,9 @@ $UnpinStartMenuTiles.width       = 225
 $UnpinStartMenuTiles.height      = 30
 $UnpinStartMenuTiles.Anchor      = 'top,right,left'
 $UnpinStartMenuTiles.location    = New-Object System.Drawing.Point(245,40)
-$UnpinStartMenuTiles.Font        = New-Object System.Drawing.Font('Consolas',9)
+$UnpinStartMenuTiles.Font        = New-Object System.Drawing.Font('Segoe UI',9)
 $UnpinStartMenuTiles.ForeColor   = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+Set-ButtonStyle $UnpinStartMenuTiles
 
 $DisableTelemetry                = New-Object system.Windows.Forms.Button
 $DisableTelemetry.FlatStyle      = 'Flat'
@@ -448,8 +455,9 @@ $DisableTelemetry.width          = 225
 $DisableTelemetry.height         = 30
 $DisableTelemetry.Anchor         = 'top,right,left'
 $DisableTelemetry.location       = New-Object System.Drawing.Point(10,80)
-$DisableTelemetry.Font           = New-Object System.Drawing.Font('Consolas',9)
+$DisableTelemetry.Font           = New-Object System.Drawing.Font('Segoe UI',9)
 $DisableTelemetry.ForeColor      = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+Set-ButtonStyle $DisableTelemetry
 
 $RemoveRegkeys                   = New-Object system.Windows.Forms.Button
 $RemoveRegkeys.FlatStyle         = 'Flat'
@@ -458,8 +466,9 @@ $RemoveRegkeys.width             = 225
 $RemoveRegkeys.height            = 30
 $RemoveRegkeys.Anchor            = 'top,right,left'
 $RemoveRegkeys.location          = New-Object System.Drawing.Point(245,80)
-$RemoveRegkeys.Font              = New-Object System.Drawing.Font('Consolas',9)
+$RemoveRegkeys.Font              = New-Object System.Drawing.Font('Segoe UI',9)
 $RemoveRegkeys.ForeColor         = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+Set-ButtonStyle $RemoveRegkeys
 
 $InstallNet35                    = New-Object system.Windows.Forms.Button
 $InstallNet35.FlatStyle          = 'Flat'
@@ -468,8 +477,9 @@ $InstallNet35.width              = 460
 $InstallNet35.height             = 30
 $InstallNet35.Anchor             = 'top,right,left'
 $InstallNet35.location           = New-Object System.Drawing.Point(10,120)
-$InstallNet35.Font               = New-Object System.Drawing.Font('Consolas',9)
+$InstallNet35.Font               = New-Object System.Drawing.Font('Segoe UI',9)
 $InstallNet35.ForeColor          = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+Set-ButtonStyle $InstallNet35
 
 $Form.controls.AddRange(@($RegistryPanel,$DebloatPanel,$CortanaPanel,$EdgePanel,$DarkThemePanel,$OtherPanel))
 $DebloatPanel.controls.AddRange(@($Debloat,$CustomizeBlacklist,$RemoveAllBloatware,$RemoveBlacklistedBloatware))
@@ -525,8 +535,9 @@ $CustomizeBlacklist.Add_Click( {
         $SaveList.width                 = 560
         $SaveList.height                = 30
         $SaveList.Location              = New-Object System.Drawing.Point(10, 530)
-        $SaveList.Font                  = New-Object System.Drawing.Font('Consolas',9)
+        $SaveList.Font                  = New-Object System.Drawing.Font('Segoe UI',9)
         $SaveList.ForeColor             = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
+        Set-ButtonStyle $SaveList
 
         $CustomizeForm.controls.AddRange(@($SaveList,$ListPanel))
 
@@ -576,7 +587,7 @@ $CustomizeBlacklist.Add_Click( {
             $label = New-Object System.Windows.Forms.Label
             $label.Location = New-Object System.Drawing.Point(-10, (2 + $position * 25))
             $label.Text = $notes
-            $label.Font = New-Object System.Drawing.Font('Consolas',8)
+            $label.Font = New-Object System.Drawing.Font('Segoe UI',8)
             $label.Width = 260
             $label.Height = 27
             $Label.TextAlign = [System.Drawing.ContentAlignment]::TopRight
@@ -585,7 +596,7 @@ $CustomizeBlacklist.Add_Click( {
 
             $Checkbox = New-Object System.Windows.Forms.CheckBox
             $Checkbox.Text = $appName
-            $CheckBox.Font = New-Object System.Drawing.Font('Consolas',8)
+            $CheckBox.Font = New-Object System.Drawing.Font('Segoe UI',8)
             $CheckBox.FlatStyle = 'Flat'
             $CheckBox.ForeColor = [System.Drawing.ColorTranslator]::FromHtml("#eeeeee")
             $Checkbox.Location = New-Object System.Drawing.Point(268, (0 + $position * 25))
