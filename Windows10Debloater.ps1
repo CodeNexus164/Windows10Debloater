@@ -1,5 +1,6 @@
-#This function finds any AppX/AppXProvisioned package and uninstalls it, except for Freshpaint, Windows Calculator, Windows Store, and Windows Photos.
-#Also, to note - This does NOT remove essential system services/software/etc such as .NET framework installations, Cortana, Edge, etc.
+# This function finds any AppX/AppXProvisioned package and uninstalls it, except for those included in the expanded $WhitelistedApps
+# variable (e.g., Windows Calculator, Store, Photos, Paint 3D, Ubuntu on Windows, Xbox services, DesktopAppInstaller, Slack, etc.).
+# Also, to note - This does NOT remove essential system services/software/etc such as .NET framework installations, Cortana, Edge, etc.
 
 #This will self elevate the script so with a UAC prompt since this script needs to be run as an Administrator in order to function properly.
 If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
