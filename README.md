@@ -187,3 +187,17 @@ There may be some confusion, but when using the Allowlist/Blocklist, the checkma
 ## Credits
 
 Thank you to [a60wattfish](https://github.com/a60wattfish), [abulgatz](abulgatz), [xsisbest](https://github.com/xsisbest), [Damian](https://github.com/Damian), [Vikingat-RAGE](https://github.com/Vikingat-RAGE), Reddit user [/u/GavinEke](https://github.com/GavinEke), and all of the contributors (https://github.com/Sycnex/Windows10Debloater/graphs/contributors) for the suggestions, code, changes, and fixes that you have all graciously worked hard on and shared! You all have done a fantastic job!
+
+## Development
+
+To analyze scripts with PSScriptAnalyzer:
+
+```powershell
+pwsh ./Run-ScriptAnalyzer.ps1
+```
+
+To run tests with Pester:
+
+```powershell
+pwsh -NoLogo -NoProfile -Command "Invoke-Pester -Path tests"
+```
