@@ -1,3 +1,4 @@
+Import-Module "$PSScriptRoot/../modules/AppLists.psm1"
 #This function will revert the changes you made when running the Start-Debloat function.
         
     #This line reinstalls all of the bloatware that was removed

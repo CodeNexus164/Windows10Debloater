@@ -1,3 +1,4 @@
+Import-Module "$PSScriptRoot/../modules/AppLists.psm1"
 #Disables Windows Feedback Experience
     Write-Output "Disabling Windows Feedback Experience program"
     $Advertising = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo"

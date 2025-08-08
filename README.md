@@ -111,6 +111,8 @@ DmClient
 These scheduled tasks that are disabled have absolutely no impact on the function of the OS.
 
 ## Bloatware that is removed
+The lists of removed and whitelisted applications are maintained in `modules/AppLists.psm1`. Update the `Bloatware` or `WhitelistedApps` arrays there to change the defaults for all scripts.
+
 
 [3DBuilder](https://www.microsoft.com/en-us/p/3d-builder/9wzdncrfj3t6),
 [ActiproSoftware](https://www.microsoft.com/en-us/p/actipro-universal-windows-controls/9wzdncrdlvzp),

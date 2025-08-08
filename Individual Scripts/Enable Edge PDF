@@ -1,3 +1,4 @@
+Import-Module "$PSScriptRoot/../modules/AppLists.psm1"
 Write-Output "Setting Edge back to default"
     $NoPDF = "HKCR:\.pdf"
     $NoProgids = "HKCR:\.pdf\OpenWithProgids"

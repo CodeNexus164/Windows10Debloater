@@ -1,3 +1,4 @@
+Import-Module "$PSScriptRoot/../modules/AppLists.psm1"
 #Stops edge from taking over as the default .PDF viewer    
     Write-Output "Stopping Edge from taking over as the default .PDF viewer"
     $NoPDF = "HKCR:\.pdf"

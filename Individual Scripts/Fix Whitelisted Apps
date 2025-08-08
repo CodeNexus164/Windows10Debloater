@@ -1,3 +1,4 @@
+Import-Module "$PSScriptRoot/../modules/AppLists.psm1"
 If (!(Get-AppxPackage -AllUsers | Select Microsoft.Paint3D, Microsoft.WindowsCalculator, Microsoft.WindowsStore, Microsoft.Windows.Photos)) {
     
         #Credit to abulgatz for these 4 lines of code

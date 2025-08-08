@@ -1,3 +1,4 @@
+Import-Module "$PSScriptRoot/../modules/AppLists.psm1"
 Write-Host "Disabling Cortana"
     $Cortana1 = "HKCU:\SOFTWARE\Microsoft\Personalization\Settings"
     $Cortana2 = "HKCU:\SOFTWARE\Microsoft\InputPersonalization"

@@ -1,3 +1,4 @@
+Import-Module "$PSScriptRoot/../modules/AppLists.psm1"
 $Keys = @(
             
         #Remove Background Tasks

@@ -1,3 +1,4 @@
+Import-Module "$PSScriptRoot/../modules/AppLists.psm1"
 # "This Computer"-Button starts the explorer on the following path:
 # 	LaunchTo	Value	Description
 #				1 		Computer (Harddrives, Network, etc.)

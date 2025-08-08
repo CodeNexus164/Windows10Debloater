@@ -1,3 +1,4 @@
+Import-Module "$PSScriptRoot/../modules/AppLists.psm1"
 # https://superuser.com/a/1442733
 #Requires -RunAsAdministrator
 

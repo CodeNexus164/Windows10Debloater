@@ -1,3 +1,4 @@
+Import-Module "$PSScriptRoot/../modules/AppLists.psm1"
 $Keys = @(
             
         # Deactivate showing of last used files
