@@ -2,6 +2,8 @@
 #Also, to note - This does NOT remove essential system services/software/etc such as .NET framework installations, Cortana, Edge, etc.
 
 #This will self elevate the script so with a UAC prompt since this script needs to be run as an Administrator in order to function properly.
+[CmdletBinding()]
+param()
 If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
     Write-Host "You didn't run this script as an Administrator. This script will self elevate to run as an Administrator and continue."
     Start-Sleep 1
@@ -15,8 +17,6 @@ If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
     Exit
 }
 
-#no errors throughout
-$ErrorActionPreference = 'silentlycontinue'
 
 $DebloatFolder = "C:\Temp\Windows10Debloater"
 If (Test-Path $DebloatFolder) {
@@ -45,9 +45,14 @@ Function DebloatAll {
     Microsoft.Windows.AssignedAccessLockApp|Microsoft.Windows.CapturePicker|Microsoft.Windows.CloudExperienceHost|Microsoft.Windows.ContentDeliveryManager|Microsoft.Windows.Cortana|Microsoft.Windows.NarratorQuickStart|`
     Microsoft.Windows.ParentalControls|Microsoft.Windows.PeopleExperienceHost|Microsoft.Windows.PinningConfirmationDialog|Microsoft.Windows.SecHealthUI|Microsoft.Windows.SecureAssessmentBrowser|Microsoft.Windows.ShellExperienceHost|`
     Microsoft.Windows.XGpuEjectDialog|Microsoft.XboxGameCallableUI|Windows.CBSPreview|windows.immersivecontrolpanel|Windows.PrintDialog|Microsoft.VCLibs.140.00|Microsoft.Services.Store.Engagement|Microsoft.UI.Xaml.2.0|*Nvidia*'
-    Get-AppxPackage -AllUsers | Where-Object {$_.Name -NotMatch $WhitelistedApps -and $_.Name -NotMatch $NonRemovable} | Remove-AppxPackage
-    Get-AppxPackage | Where-Object {$_.Name -NotMatch $WhitelistedApps -and $_.Name -NotMatch $NonRemovable} | Remove-AppxPackage
-    Get-AppxProvisionedPackage -Online | Where-Object {$_.PackageName -NotMatch $WhitelistedApps -and $_.PackageName -NotMatch $NonRemovable} | Remove-AppxProvisionedPackage -Online
+    try {
+        Get-AppxPackage -AllUsers | Where-Object {$_.Name -NotMatch $WhitelistedApps -and $_.Name -NotMatch $NonRemovable} | Remove-AppxPackage -ErrorAction Stop
+        Get-AppxPackage | Where-Object {$_.Name -NotMatch $WhitelistedApps -and $_.Name -NotMatch $NonRemovable} | Remove-AppxPackage -ErrorAction Stop
+        Get-AppxProvisionedPackage -Online | Where-Object {$_.PackageName -NotMatch $WhitelistedApps -and $_.PackageName -NotMatch $NonRemovable} | Remove-AppxProvisionedPackage -Online -ErrorAction Stop
+    }
+    catch {
+        Write-Error "Failed to remove Appx packages: $_"
+    }
 }
 
 Function DebloatBlacklist {
@@ -120,9 +125,14 @@ Function DebloatBlacklist {
         #"*Microsoft.WindowsStore*"
     )
     foreach ($Bloat in $Bloatware) {
-        Get-AppxPackage -Name $Bloat| Remove-AppxPackage
-        Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like $Bloat | Remove-AppxProvisionedPackage -Online
-        Write-Output "Trying to remove $Bloat."
+        try {
+            Get-AppxPackage -Name $Bloat | Remove-AppxPackage -ErrorAction Stop
+            Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like $Bloat | Remove-AppxProvisionedPackage -Online -ErrorAction Stop
+            Write-Output "Trying to remove $Bloat."
+        }
+        catch {
+            Write-Warning "Failed to remove $Bloat: $_"
+        }
     }
 }
 
@@ -499,34 +509,39 @@ Function CheckDMWService {
 }
     
 Function Enable-EdgePDF {
-    Write-Output "Setting Edge back to default"
-    $NoPDF = "HKCR:\.pdf"
-    $NoProgids = "HKCR:\.pdf\OpenWithProgids"
-    $NoWithList = "HKCR:\.pdf\OpenWithList"
-    #Sets edge back to default
-    If (Get-ItemProperty $NoPDF  NoOpenWith) {
-        Remove-ItemProperty $NoPDF  NoOpenWith
-    } 
-    If (Get-ItemProperty $NoPDF  NoStaticDefaultVerb) {
-        Remove-ItemProperty $NoPDF  NoStaticDefaultVerb 
-    }       
-    If (Get-ItemProperty $NoProgids  NoOpenWith) {
-        Remove-ItemProperty $NoProgids  NoOpenWith 
-    }        
-    If (Get-ItemProperty $NoProgids  NoStaticDefaultVerb) {
-        Remove-ItemProperty $NoProgids  NoStaticDefaultVerb 
-    }        
-    If (Get-ItemProperty $NoWithList  NoOpenWith) {
-        Remove-ItemProperty $NoWithList  NoOpenWith
-    }    
-    If (Get-ItemProperty $NoWithList  NoStaticDefaultVerb) {
-        Remove-ItemProperty $NoWithList  NoStaticDefaultVerb
+    try {
+        Write-Output "Setting Edge back to default"
+        $NoPDF = "HKCR:\.pdf"
+        $NoProgids = "HKCR:\.pdf\OpenWithProgids"
+        $NoWithList = "HKCR:\.pdf\OpenWithList"
+        #Sets edge back to default
+        If (Get-ItemProperty $NoPDF  NoOpenWith) {
+            Remove-ItemProperty $NoPDF  NoOpenWith -ErrorAction Stop
+        }
+        If (Get-ItemProperty $NoPDF  NoStaticDefaultVerb) {
+            Remove-ItemProperty $NoPDF  NoStaticDefaultVerb -ErrorAction Stop
+        }
+        If (Get-ItemProperty $NoProgids  NoOpenWith) {
+            Remove-ItemProperty $NoProgids  NoOpenWith -ErrorAction Stop
+        }
+        If (Get-ItemProperty $NoProgids  NoStaticDefaultVerb) {
+            Remove-ItemProperty $NoProgids  NoStaticDefaultVerb -ErrorAction Stop
+        }
+        If (Get-ItemProperty $NoWithList  NoOpenWith) {
+            Remove-ItemProperty $NoWithList  NoOpenWith -ErrorAction Stop
+        }
+        If (Get-ItemProperty $NoWithList  NoStaticDefaultVerb) {
+            Remove-ItemProperty $NoWithList  NoStaticDefaultVerb -ErrorAction Stop
+        }
+
+        #Removes an underscore '_' from the Registry key for Edge
+        $Edge2 = "HKCR:\AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723_"
+        If (Test-Path $Edge2) {
+            Set-Item $Edge2 AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723 -ErrorAction Stop
+        }
     }
-        
-    #Removes an underscore '_' from the Registry key for Edge
-    $Edge2 = "HKCR:\AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723_"
-    If (Test-Path $Edge2) {
-        Set-Item $Edge2 AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723
+    catch {
+        Write-Warning "Failed to reset Edge PDF settings: $_"
     }
 }
 

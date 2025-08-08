@@ -7,8 +7,8 @@ $EnableEdgePDFTakeover.Location = New-Object System.Drawing.Point(155, 260)
 #>
 
 #This will self elevate the script so with a UAC prompt since this script needs to be run as an Administrator in order to function properly.
-
-$ErrorActionPreference = 'SilentlyContinue'
+[CmdletBinding()]
+param()
 
 $Button = [System.Windows.MessageBoxButton]::YesNoCancel
 $ErrorIco = [System.Windows.MessageBoxImage]::Error
@@ -528,7 +528,6 @@ $CustomizeBlacklist.Add_Click( {
         $CustomizeForm.controls.AddRange(@($SaveList,$ListPanel))
 
         $SaveList.Add_Click( {
-               # $ErrorActionPreference = 'SilentlyContinue'
 
                 '$global:WhiteListedApps = @(' | Out-File -FilePath $PSScriptRoot\custom-lists.ps1 -Encoding utf8
                 @($ListPanel.controls) | ForEach {
@@ -664,23 +663,26 @@ $CustomizeBlacklist.Add_Click( {
     })
 
 
-$RemoveBlacklistedBloatware.Add_Click( { 
-        $ErrorActionPreference = 'SilentlyContinue'
+$RemoveBlacklistedBloatware.Add_Click( {
         Function DebloatBlacklist {
             Write-Host "Requesting removal of $global:BloatwareRegex"
             Write-Host "--- This may take a while - please be patient ---"
-            Get-AppxPackage | Where-Object Name -cmatch $global:BloatwareRegex | Remove-AppxPackage
-            Write-Host "...now starting the silent ProvisionedPackage bloatware removal..."
-            Get-AppxProvisionedPackage -Online | Where-Object DisplayName -cmatch $global:BloatwareRegex | Remove-AppxProvisionedPackage -Online
-            Write-Host "...and the final cleanup..."
-            Get-AppxPackage -AllUsers | Where-Object Name -cmatch $global:BloatwareRegex | Remove-AppxPackage
+            try {
+                Get-AppxPackage | Where-Object Name -cmatch $global:BloatwareRegex | Remove-AppxPackage -ErrorAction Stop
+                Write-Host "...now starting the silent ProvisionedPackage bloatware removal..."
+                Get-AppxProvisionedPackage -Online | Where-Object DisplayName -cmatch $global:BloatwareRegex | Remove-AppxProvisionedPackage -Online -ErrorAction Stop
+                Write-Host "...and the final cleanup..."
+                Get-AppxPackage -AllUsers | Where-Object Name -cmatch $global:BloatwareRegex | Remove-AppxPackage -ErrorAction Stop
+            }
+            catch {
+                Write-Warning "Failed to remove blacklisted bloatware: $_"
+            }
         }
         Write-Host "`n`n`n`n`n`n`n`n`n`n`n`n`n`n`n`n`nRemoving blocklisted Bloatware.`n"
         DebloatBlacklist
         Write-Host "Bloatware removed!"
     })
 $RemoveAllBloatware.Add_Click( { 
-        $ErrorActionPreference = 'SilentlyContinue'
         #This function finds any AppX/AppXProvisioned package and uninstalls it, except for Freshpaint, Windows Calculator, Windows Store, and Windows Photos.
         #Also, to note - This does NOT remove essential system services/software/etc such as .NET framework installations, Cortana, Edge, etc.
 
@@ -966,7 +968,6 @@ $START_MENU_LAYOUT = @"
   
     } )
 $RevertChanges.Add_Click( { 
-        $ErrorActionPreference = 'SilentlyContinue'
         #This function will revert the changes you made when running the Start-Debloat function.
         
         #This line reinstalls all of the bloatware that was removed
@@ -1072,7 +1073,6 @@ $RevertChanges.Add_Click( {
         }
     })
 $DisableCortana.Add_Click( { 
-        $ErrorActionPreference = 'SilentlyContinue'
         Write-Host "Disabling Cortana"
         $Cortana1 = "HKCU:\SOFTWARE\Microsoft\Personalization\Settings"
         $Cortana2 = "HKCU:\SOFTWARE\Microsoft\InputPersonalization"
@@ -1093,7 +1093,6 @@ $DisableCortana.Add_Click( {
         Write-Host "Cortana has been disabled."
     })
 $DisableEdgePDFTakeover.Add_Click( { 
-        $ErrorActionPreference = 'SilentlyContinue'
         #Stops edge from taking over as the default .PDF viewer    
         Write-Host "Stopping Edge from taking over as the default .PDF viewer"
         $NoPDF = "HKCR:\.pdf"
@@ -1126,7 +1125,6 @@ $DisableEdgePDFTakeover.Add_Click( {
         Write-Host "Edge should no longer take over as the default .PDF."
     })
 $EnableCortana.Add_Click( { 
-        $ErrorActionPreference = 'SilentlyContinue'
         Write-Host "Re-enabling Cortana"
         $Cortana1 = "HKCU:\SOFTWARE\Microsoft\Personalization\Settings"
         $Cortana2 = "HKCU:\SOFTWARE\Microsoft\InputPersonalization"
@@ -1148,7 +1146,6 @@ $EnableCortana.Add_Click( {
     })
 $EnableEdgePDFTakeover.Add_Click( { 
         New-PSDrive  HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT
-        $ErrorActionPreference = 'SilentlyContinue'
         Write-Host "Setting Edge back to default"
         $NoPDF = "HKCR:\.pdf"
         $NoProgids = "HKCR:\.pdf\OpenWithProgids"
@@ -1181,7 +1178,6 @@ $EnableEdgePDFTakeover.Add_Click( {
         Write-Host "Edge will now be able to be used for .PDF."
     })
 $DisableTelemetry.Add_Click( { 
-        $ErrorActionPreference = 'SilentlyContinue'
         #Disables Windows Feedback Experience
         Write-Host "Disabling Windows Feedback Experience program"
         $Advertising = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo"
@@ -1325,7 +1321,6 @@ $DisableTelemetry.Add_Click( {
         Write-Host "Telemetry has been disabled!"
     })
 $RemoveRegkeys.Add_Click( { 
-        $ErrorActionPreference = 'SilentlyContinue'
         $Keys = @(
             
             New-PSDrive  HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT

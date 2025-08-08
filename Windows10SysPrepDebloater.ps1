@@ -3,6 +3,7 @@
 
 #This is the switch parameter for running this script as a 'silent' script, for use in MDT images or any type of mass deployment without user interaction.
 
+[CmdletBinding()]
 param (
   [switch]$Debloat, [switch]$SysPrep
 )
@@ -39,15 +40,23 @@ Function Start-Debloat {
     [regex]$WhitelistedApps = 'Microsoft.ScreenSketch|Microsoft.Paint3D|Microsoft.WindowsCalculator|Microsoft.WindowsStore|Microsoft.Windows.Photos|CanonicalGroupLimited.UbuntuonWindows|`
     Microsoft.MicrosoftStickyNotes|Microsoft.MSPaint|Microsoft.WindowsCamera|.NET|Framework|Microsoft.HEIFImageExtension|Microsoft.ScreenSketch|Microsoft.StorePurchaseApp|`
     Microsoft.VP9VideoExtensions|Microsoft.WebMediaExtensions|Microsoft.WebpImageExtension|Microsoft.DesktopAppInstaller'
-    Get-AppxPackage -AllUsers | Where-Object {$_.Name -NotMatch $WhitelistedApps} | Remove-AppxPackage -ErrorAction SilentlyContinue
-    # Run this again to avoid error on 1803 or having to reboot.
-    Get-AppxPackage -AllUsers | Where-Object {$_.Name -NotMatch $WhitelistedApps} | Remove-AppxPackage -ErrorAction SilentlyContinue
-    $AppxRemoval = Get-AppxProvisionedPackage -Online | Where-Object {$_.PackageName -NotMatch $WhitelistedApps} 
-    ForEach ( $App in $AppxRemoval) {
-    
-        Remove-AppxProvisionedPackage -Online -PackageName $App.PackageName 
-        
+    try {
+        Get-AppxPackage -AllUsers | Where-Object {$_.Name -NotMatch $WhitelistedApps} | Remove-AppxPackage -ErrorAction Stop
+        # Run this again to avoid error on 1803 or having to reboot.
+        Get-AppxPackage -AllUsers | Where-Object {$_.Name -NotMatch $WhitelistedApps} | Remove-AppxPackage -ErrorAction Stop
+        $AppxRemoval = Get-AppxProvisionedPackage -Online | Where-Object {$_.PackageName -NotMatch $WhitelistedApps}
+        foreach ($App in $AppxRemoval) {
+            try {
+                Remove-AppxProvisionedPackage -Online -PackageName $App.PackageName -ErrorAction Stop
+            }
+            catch {
+                Write-Warning "Failed to remove provisioned package $($App.PackageName): $_"
+            }
         }
+    }
+    catch {
+        Write-Error "Failed during app removal: $_"
+    }
 }
 
 Function Remove-Keys {
