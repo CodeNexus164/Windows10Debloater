@@ -33,7 +33,19 @@ Start-Transcript -OutputDirectory "$DebloatFolder"
 
 Add-Type -AssemblyName PresentationCore, PresentationFramework
 
+<#
+.SYNOPSIS
+Removes pre-installed Windows applications that are not whitelisted.
+.DESCRIPTION
+Uses Appx commands to remove provisioned and installed packages for all users.
+.PARAMETER None
+This function does not accept any parameters.
+.EXAMPLE
+DebloatAll
+#>
 Function DebloatAll {
+    [CmdletBinding()]
+    param()
     #Removes AppxPackages
     #Credit to /u/GavinEke for a modified version of my whitelist code
     $WhitelistedApps = 'Microsoft.ScreenSketch|Microsoft.Paint3D|Microsoft.WindowsCalculator|Microsoft.WindowsStore|Microsoft.Windows.Photos|CanonicalGroupLimited.UbuntuonWindows|`
@@ -50,7 +62,19 @@ Function DebloatAll {
     Get-AppxProvisionedPackage -Online | Where-Object {$_.PackageName -NotMatch $WhitelistedApps -and $_.PackageName -NotMatch $NonRemovable} | Remove-AppxProvisionedPackage -Online
 }
 
+<#
+.SYNOPSIS
+Removes a predefined list of Windows applications.
+.DESCRIPTION
+Iterates over a list of known bloatware and removes each package.
+.PARAMETER None
+This function does not accept any parameters.
+.EXAMPLE
+DebloatBlacklist
+#>
 Function DebloatBlacklist {
+    [CmdletBinding()]
+    param()
 
     $Bloatware = @(
 
@@ -126,8 +150,20 @@ Function DebloatBlacklist {
     }
 }
 
+<#
+.SYNOPSIS
+Removes specified registry keys related to bundled applications.
+.DESCRIPTION
+Iterates through a list of registry paths and deletes each one if present.
+.PARAMETER None
+This function does not accept any parameters.
+.EXAMPLE
+Remove-Keys
+#>
 Function Remove-Keys {
-        
+    [CmdletBinding()]
+    param()
+
     #These are the registry keys that it will delete.
             
     $Keys = @(
@@ -170,8 +206,20 @@ Function Remove-Keys {
     }
 }
             
+<#
+.SYNOPSIS
+Applies registry settings to enhance user privacy.
+.DESCRIPTION
+Disables features such as Windows feedback, Cortana, and Bing search integration.
+.PARAMETER None
+This function does not accept any parameters.
+.EXAMPLE
+Protect-Privacy
+#>
 Function Protect-Privacy {
-            
+    [CmdletBinding()]
+    param()
+
     #Disables Windows Feedback Experience
     Write-Output "Disabling Windows Feedback Experience program"
     $Advertising = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo"
@@ -311,7 +359,19 @@ Function Protect-Privacy {
     }
 }
 
+<#
+.SYNOPSIS
+Disables Cortana features for the current user.
+.DESCRIPTION
+Adjusts registry values to turn off Cortana and related data collection.
+.PARAMETER None
+This function does not accept any parameters.
+.EXAMPLE
+DisableCortana
+#>
 Function DisableCortana {
+    [CmdletBinding()]
+    param()
     Write-Host "Disabling Cortana"
     $Cortana1 = "HKCU:\SOFTWARE\Microsoft\Personalization\Settings"
     $Cortana2 = "HKCU:\SOFTWARE\Microsoft\InputPersonalization"
@@ -332,7 +392,19 @@ Function DisableCortana {
     
 }
 
+<#
+.SYNOPSIS
+Re-enables Cortana features for the current user.
+.DESCRIPTION
+Restores registry settings previously modified to disable Cortana.
+.PARAMETER None
+This function does not accept any parameters.
+.EXAMPLE
+EnableCortana
+#>
 Function EnableCortana {
+    [CmdletBinding()]
+    param()
     Write-Host "Re-enabling Cortana"
     $Cortana1 = "HKCU:\SOFTWARE\Microsoft\Personalization\Settings"
     $Cortana2 = "HKCU:\SOFTWARE\Microsoft\InputPersonalization"
@@ -352,9 +424,21 @@ Function EnableCortana {
     Set-ItemProperty $Cortana3 HarvestContacts -Value 1 
 }
         
+<#
+.SYNOPSIS
+Prevents Microsoft Edge from setting itself as the default PDF viewer.
+.DESCRIPTION
+Modifies registry keys to block Edge from hijacking PDF associations.
+.PARAMETER None
+This function does not accept any parameters.
+.EXAMPLE
+Stop-EdgePDF
+#>
 Function Stop-EdgePDF {
-    
-    #Stops edge from taking over as the default .PDF viewer    
+    [CmdletBinding()]
+    param()
+
+    #Stops edge from taking over as the default .PDF viewer
     Write-Output "Stopping Edge from taking over as the default .PDF viewer"
     $NoPDF = "HKCR:\.pdf"
     $NoProgids = "HKCR:\.pdf\OpenWithProgids"
@@ -385,8 +469,20 @@ Function Stop-EdgePDF {
     }
 }
 
-Function Revert-Changes {   
-        
+<#
+.SYNOPSIS
+Restores settings modified by debloating actions.
+.DESCRIPTION
+Reinstalls removed packages and resets registry settings to defaults.
+.PARAMETER None
+This function does not accept any parameters.
+.EXAMPLE
+Revert-Changes
+#>
+Function Revert-Changes {
+    [CmdletBinding()]
+    param()
+
     #This function will revert the changes you made when running the Start-Debloat function.
         
     #This line reinstalls all of the bloatware that was removed
@@ -485,9 +581,22 @@ Function Revert-Changes {
     Restore3dObjects
 }
 
+<#
+.SYNOPSIS
+Ensures the dmwappushservice is enabled and running.
+.DESCRIPTION
+Sets the service to automatic and starts it when necessary. Used during debloating.
+.PARAMETER Debloat
+Switch to indicate the check is part of the debloat process.
+.EXAMPLE
+CheckDMWService -Debloat
+#>
 Function CheckDMWService {
-
-    Param([switch]$Debloat)
+    [CmdletBinding()]
+    param(
+        [Parameter()]
+        [switch]$Debloat
+    )
   
     If (Get-Service -Name dmwappushservice | Where-Object {$_.StartType -eq "Disabled"}) {
         Set-Service -Name dmwappushservice -StartupType Automatic
@@ -498,7 +607,19 @@ Function CheckDMWService {
     } 
 }
     
+<#
+.SYNOPSIS
+Restores Microsoft Edge as the default PDF viewer.
+.DESCRIPTION
+Removes registry blocks and resets Edge-related keys.
+.PARAMETER None
+This function does not accept any parameters.
+.EXAMPLE
+Enable-EdgePDF
+#>
 Function Enable-EdgePDF {
+    [CmdletBinding()]
+    param()
     Write-Output "Setting Edge back to default"
     $NoPDF = "HKCR:\.pdf"
     $NoProgids = "HKCR:\.pdf\OpenWithProgids"
@@ -530,8 +651,20 @@ Function Enable-EdgePDF {
     }
 }
 
+<#
+.SYNOPSIS
+Reinstalls key whitelisted applications if missing.
+.DESCRIPTION
+Checks for essential apps and registers them for all users if absent.
+.PARAMETER None
+This function does not accept any parameters.
+.EXAMPLE
+FixWhitelistedApps
+#>
 Function FixWhitelistedApps {
-    
+    [CmdletBinding()]
+    param()
+
     If (!(Get-AppxPackage -AllUsers | Select Microsoft.Paint3D, Microsoft.WindowsCalculator, Microsoft.WindowsStore, Microsoft.Windows.Photos)) {
     
         #Credit to abulgatz for these 4 lines of code
@@ -542,7 +675,19 @@ Function FixWhitelistedApps {
     } 
 }
 
+<#
+.SYNOPSIS
+Removes Microsoft OneDrive and related files from the system.
+.DESCRIPTION
+Backs up existing OneDrive data and uninstalls the application.
+.PARAMETER None
+This function does not accept any parameters.
+.EXAMPLE
+UninstallOneDrive
+#>
 Function UninstallOneDrive {
+    [CmdletBinding()]
+    param()
 
     Write-Host "Checking for pre-existing files and folders located in the OneDrive folders..."
     Start-Sleep 1
@@ -666,7 +811,19 @@ Function UninstallOneDrive {
     }
 }
 
+<#
+.SYNOPSIS
+Clears all pinned tiles from the Start menu.
+.DESCRIPTION
+Applies a blank Start menu layout and resets pinned items.
+.PARAMETER None
+This function does not accept any parameters.
+.EXAMPLE
+UnpinStart
+#>
 Function UnpinStart {
+    [CmdletBinding()]
+    param()
     # https://superuser.com/a/1442733
     #Requires -RunAsAdministrator
 
@@ -727,7 +884,19 @@ $START_MENU_LAYOUT = @"
     Remove-Item $layoutFile
 }
 
+<#
+.SYNOPSIS
+Removes the 3D Objects shortcut from File Explorer.
+.DESCRIPTION
+Deletes registry entries that add 3D Objects to the My Computer view.
+.PARAMETER None
+This function does not accept any parameters.
+.EXAMPLE
+Remove3dObjects
+#>
 Function Remove3dObjects {
+    [CmdletBinding()]
+    param()
     #Removes 3D Objects from the 'My Computer' submenu in explorer
     Write-Host "Removing 3D Objects from explorer 'My Computer' submenu"
     $Objects32 = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}"
@@ -740,7 +909,19 @@ Function Remove3dObjects {
     }
 }
 
+<#
+.SYNOPSIS
+Restores the 3D Objects shortcut in File Explorer.
+.DESCRIPTION
+Creates registry entries to re-add 3D Objects to the My Computer view.
+.PARAMETER None
+This function does not accept any parameters.
+.EXAMPLE
+Restore3dObjects
+#>
 Function Restore3dObjects {
+    [CmdletBinding()]
+    param()
     #Restores 3D Objects from the 'My Computer' submenu in explorer
     Write-Host "Restoring 3D Objects from explorer 'My Computer' submenu"
     $Objects32 = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}"
