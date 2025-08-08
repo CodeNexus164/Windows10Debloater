@@ -4,8 +4,18 @@
 #This is the switch parameter for running this script as a 'silent' script, for use in MDT images or any type of mass deployment without user interaction.
 
 param (
-  [switch]$Debloat, [switch]$SysPrep
+  [switch]$Debloat,
+  [switch]$SysPrep,
+  [switch]$Force
 )
+
+$osVersion = [System.Environment]::OSVersion.Version
+if ($osVersion.Major -ne 10) {
+    Write-Warning "Detected Windows version $($osVersion). This script is intended for Windows 10."
+    if (-not $Force) {
+        return
+    }
+}
 
 Function Begin-SysPrep {
 
